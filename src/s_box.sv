@@ -1,5 +1,5 @@
 module s_box #(
-    parameter CYCLES_PER_SEC = 500000000
+    parameter CYCLES_PER_SEC = 50000000 //50 Mhz clock
 ) (
     input i_clk,
     input [7:0] i_address_in,
