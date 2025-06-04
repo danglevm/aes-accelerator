@@ -9,12 +9,13 @@ module sub_bytes #(
 
 localparam num_sbox = 16;
 
-genvar i;
 
 /* instantiate all 16 s_box */
-generate;
-	for (i = 0; i < num_sbox; i = i + 1) begin
-		s_box(.i_clk(i_clk), 
+genvar i;
+generate
+	for (i = 0; i < num_sbox; i = i + 1) 
+	begin: gen_sbox
+		s_box sb (.i_clk(i_clk), 
 		.i_address_in(i_data_in[(i*8 + 7) : (i*8)]), 
 		.o_data_out(o_data_out[(i*8 + 7) : (i*8)]));
 	end
