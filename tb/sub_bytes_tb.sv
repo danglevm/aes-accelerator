@@ -1,27 +1,28 @@
 `timescale 1ns/1ps
 
-module sbox_tb ();
+module sub_bytes_tb();
 
 localparam CYCLES_PER_SEC = 16;
 localparam CLK_PERIOD = 2;
+localparam NUM_TESTS = 100;
 
-//array of 8 bits value
+logic clk;
+logic [127:0] r_data_i;
+logic [127:0] r_data_o;
+logic [127:0] r_cur_in;
+
 logic [7:0] sbox_ref_table [256];
 
-logic [7:0] r_sampled_address;
-logic [7:0] r_address_in;
-logic [7:0] r_data_out;
-logic r_clk;
-
-s_box #(
+sub_bytes #(
     .CYCLES_PER_SEC(CYCLES_PER_SEC)
-) dut (
-    .i_clk(r_clk),
-    .i_address_in(r_address_in),
-    .o_data_out(r_data_out)
+) DUT (
+	.i_clk(clk), 
+	.i_data_in(r_data_i),
+	.i_data_out(r_data_o)
 );
 
-//no internal variables
+
+//no internal variables, and
 task automatic init_sbox_ref_table();
     sbox_ref_table[8'h00] = 8'h63; sbox_ref_table[8'h01] = 8'h7c; sbox_ref_table[8'h02] = 8'h77; sbox_ref_table[8'h03] = 8'h7b;
     sbox_ref_table[8'h04] = 8'hf2; sbox_ref_table[8'h05] = 8'h6b; sbox_ref_table[8'h06] = 8'h6f; sbox_ref_table[8'h07] = 8'hc5;
@@ -104,45 +105,45 @@ task automatic init_sbox_ref_table();
     sbox_ref_table[8'hfc] = 8'hb0; sbox_ref_table[8'hfd] = 8'h54; sbox_ref_table[8'hfe] = 8'hbb; sbox_ref_table[8'hff] = 8'h16;
 endtask
 
-/* clock stimulus */
-initial begin 
-    r_clk = 1'b0;
-    forever #(CLK_PERIOD/2) r_clk = ~r_clk;
-end
-
-/* check if the output is stable and matches an expected value 1 cycle after an address is applied  */
-property check_sbox_output;
-    @(posedge clk)
-        //at every positive clock edge, if the condition 1 is met, 
-        //capture the current value of the signal i_address_in and store in local var
-        (1, r_sampled_address = r_address_in);
-
-        ##1; //wait 1 cycle for s-box o/p to be valid
-
-        (r_data_out == sbox_ref_table[r_address_in]);
-endproperty
-
-initial begin
-    //reset tb signals
-    r_address_in = 8'b0;
-    init_sbox_ref_table();
-
-    $display("Start S-Box test...");
-    
-    for (int i = 0; i < 256; i = i + 1) begin
-        r_address_in = i[7:0];
-
-        //one cycle for applied input
-        @(posedge r_clk);
-
-        //one cycle for expecting output
-        @(posedge r_clk);
-        assert (r_data_out == sbox_ref_table[r_address_in])
-        else $error (" Wrong value - address=%h value=%h", r_address_in, sbox_ref_table[r_address_in]);
-
-        sbox_sva_check: assert property(check_sbox_output)
-    end
-    $display("All 256 S-Box entries checked. Simulation Time: %0t", $time);
-    #100 $stop;
+initial begin  
+    clk = 1'b0;
+    forever #(CLK_PERIOD/2) clk = ~clk;
 end 
 
+
+initial begin
+    /* reset values */
+    r_data_i = 1'b0;
+    $display("Start SubBytes test...");
+
+    init_sbox_ref_table();
+
+    /* checking 16 lanes */
+    for (int lane = 0; lane < 16; lane = lane + 1) begin 
+        for (int val = 0; val < 16; val = val + 1) begin
+
+            //set all values of this to 0
+            r_cur_in = 128'b0;
+            r_cur_in[(lane*8 + 7) : (lane*8)] = val[7:0];
+
+            r_data_i = r_cur_in;
+
+            // apply 1 cycle to drive inputs to DUT
+            @(posedge clk);
+
+            //apply 1 cycle to wait for output
+            @(posedge clk);
+
+            //check all 16 lanes of the output
+            for (int k = 0; i < 16; k = k + 1) begin
+                assert(r_data_o[(k*8 + 7) : (k * 8)] ==)
+            end
+        end
+    end
+
+$stop;
+end
+
+
+
+endmodule 

@@ -10,6 +10,7 @@ module sub_bytes #(
 localparam num_sbox = 16;
 
 
+
 /* instantiate all 16 s_box */
 genvar i;
 generate
